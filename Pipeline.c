@@ -34,13 +34,14 @@ extern int sizePipeline(Pipeline pipeline) {
 
 static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
   PipelineRep r=(PipelineRep)pipeline;
-  for (int i=0; i<sizePipeline(r) && !*eof; i++)
-    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1);
+  for (int i=0; i<sizePipeline(r) && !*eof; i++){
+    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1); // this command is run, Command.c
+  }
 }
 
 extern void execPipeline(Pipeline pipeline, Jobs jobs, int *eof) {
   int jobbed=0;
-  execute(pipeline,jobs,&jobbed,eof);
+  execute(pipeline,jobs,&jobbed,eof); // same file, method above
   if (!jobbed)
     freePipeline(pipeline);	// for fg builtins, and such
 }

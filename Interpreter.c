@@ -41,5 +41,5 @@ extern void interpretTree(Tree t, int *eof, Jobs jobs) {
     return;
   Sequence sequence=newSequence();
   i_sequence(t,sequence);
-  execSequence(sequence,jobs,eof);
+  execSequence(sequence,jobs,eof); // this line is causing zero pointer error, Sequence.c
 }

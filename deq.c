@@ -190,132 +190,17 @@ static Data get(Rep r, End e)
 
 static Data rem(Rep r, End e, Data d)
 {
-  Node head = r->ht[0];
-  Node tail = r->ht[1];
-
-  if (head == NULL || tail == NULL)
-  {
-    fprintf(stderr, "A NULL value was tried to be removed");
-    exit(EXIT_FAILURE);
+  if(r->ht[Head]->np[Head] == NULL){
+    r->ht[Head] = r->ht[Head]->np[Tail];
+    r->ht[Head]->np[Head] = NULL;
+  } else if(r->ht[Tail]->np[Tail] == NULL){
+    r->ht[Tail] = r->ht[Tail]->np[Head];
+    r->ht[Tail]->np[Tail] = NULL;
+  } else {
+    r->ht[Head]->np[Tail] = r->ht[Tail]->np[Tail];
+    r->ht[Tail]->np[Head] = r->ht[Head];
   }
-
-  if (e == 0)
-  { // Remove element 'd' closest to Head
-    Node curNode = head;
-    int found = 0;
-    while (curNode != NULL)
-    {
-
-      if (curNode->data == d)
-      { // Found
-
-        if (curNode == head)
-        {
-          if (curNode->np[1] != NULL)
-          {
-            r->ht[0] = curNode->np[1]; // sets
-            Data d = curNode->data;
-            free(curNode);
-            return d;
-          }
-          else
-          {
-            r->ht[0] = NULL;
-            r->ht[1] = NULL;
-            Data d = curNode->data;
-            free(curNode);
-            return d;
-          }
-        }
-        else if (curNode == tail)
-        {
-          r->ht[1] = curNode->np[0];
-          Data d = curNode->data;
-          free(curNode);
-          return d;
-        }
-        else
-        {
-          curNode->np[0]->np[1] = curNode->np[1]; // Links previous's next to next
-          curNode->np[1]->np[0] = curNode->np[0]; // Links next's previous to previous
-          Data d = curNode->data;
-          curNode->np[0] = NULL;
-          curNode->np[1] = NULL;
-          free(curNode);
-          return d;
-        }
-
-        found = 1;
-      }
-      else
-      {                           // Not Found
-        curNode = curNode->np[1]; // If not found, move to next curNode
-      }
-    }
-    if (found == 0)
-    {
-      fprintf(stderr, "The value was never found in the DLL");
-      exit(EXIT_FAILURE);
-    }
-  }
-  else
-  { // Remove element 'd' closest to Tail
-    Node curNode = tail;
-    int found = 0;
-
-    while (curNode != NULL)
-    {
-      if (curNode->data == d)
-      { // Found
-        found = 1;
-        if (curNode == tail)
-        {
-          if (curNode->np[0] == NULL)
-          {
-            r->ht[0] = NULL;
-            r->ht[1] = NULL;
-            Data d = curNode->data;
-            free(curNode);
-            return d;
-          }
-          else
-          {
-            r->ht[1] = curNode->np[0];
-            Data d = curNode->data;
-            free(curNode);
-            return d;
-          }
-        }
-        else if (curNode == head)
-        {
-          r->ht[0] = curNode->np[1];
-          Data d = curNode->data;
-          free(curNode);
-          return d;
-        }
-        else
-        {
-          curNode->np[0]->np[1] = curNode->np[1]; // Links previous's next to next
-          curNode->np[1]->np[0] = curNode->np[0]; // Links next's previous to previous
-          Data d = curNode->data;
-          curNode->np[0] = NULL;
-          curNode->np[1] = NULL;
-          free(curNode);
-          return d;
-        }
-      }
-      else
-      {
-        curNode = curNode->np[0];
-      }
-    }
-
-    if (found == 0)
-    {
-      fprintf(stderr, "The value was never found in the DLL");
-      exit(EXIT_FAILURE);
-    }
-  }
+  r->len--;
   return 0;
 }
 
@@ -353,6 +238,7 @@ extern void deq_del(Deq q, DeqMapF f)
 {
   if (f)
     deq_map(q, f);
+    
   Node curr = rep(q)->ht[Head];
   while (curr)
   {

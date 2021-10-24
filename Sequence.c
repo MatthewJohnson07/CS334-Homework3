@@ -15,7 +15,9 @@ extern void freeSequence(Sequence sequence) {
 }
 
 extern void execSequence(Sequence sequence, Jobs jobs, int *eof) {
-  while (deq_len(sequence) && !*eof)
-    execPipeline(deq_head_get(sequence),jobs,eof);
+  while (deq_len(sequence) && !*eof){
+    execPipeline(deq_head_get(sequence),jobs,eof); // pipeline.c, where pointer occurs
+  }
+
   freeSequence(sequence);
 }

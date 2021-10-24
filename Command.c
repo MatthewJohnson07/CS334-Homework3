@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include <string.h>
 
 #include "Command.h"
@@ -11,7 +12,7 @@ typedef struct {
   char **argv;
 } *CommandRep;
 
-#define BIARGS CommandRep r, int *eof, Jobs jobs
+#define BIARGS CommandRep r, int *eof, Jobs jobs // CommandRep, End of File Pointer, Jobs
 #define BINAME(name) bi_##name
 #define BIDEFN(name) static void BINAME(name) (BIARGS)
 #define BIENTRY(name) {#name,BINAME(name)}
@@ -54,7 +55,7 @@ BIDEFN(cd) {
 }
 
 static int builtin(BIARGS) {
-  typedef struct {
+  typedef struct { // makes it here
     char *s;
     void (*f)(BIARGS);
   } Builtin;
@@ -67,7 +68,7 @@ static int builtin(BIARGS) {
   int i;
   for (i=0; builtins[i].s; i++)
     if (!strcmp(r->file,builtins[i].s)) {
-      builtins[i].f(r,eof,jobs);
+      builtins[i].f(r,eof,jobs); // error in here, calls array above
       return 1;
     }
   return 0;
@@ -115,8 +116,10 @@ static void child(CommandRep r, int fg) {
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
   CommandRep r=command;
-  if (fg && builtin(r,eof,jobs))
+  if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
     return;
+  }
+  
   if (!*jobbed) {
     *jobbed=1;
     addJobs(jobs,pipeline);

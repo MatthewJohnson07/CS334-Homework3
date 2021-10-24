@@ -27,13 +27,16 @@ int main() {
   
   while (!eof) {
     char *line=readline(prompt);
-    if (!line)
+    if (!line){
       break;
-    if (*line)
+    }
+
+    if (*line){
       add_history(line);
+    }
     Tree tree=parseTree(line);
     free(line);
-    interpretTree(tree,&eof,jobs);
+    interpretTree(tree,&eof,jobs); // Interpreter
     freeTree(tree);
   }
 
