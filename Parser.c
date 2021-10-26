@@ -55,6 +55,10 @@ static T_command p_command() {
   return command;
 }
 
+/**
+ * Creates a new command, calling p_command()
+ * Creates a new pipeline, calling new_pipeline
+ */
 static T_pipeline p_pipeline() {
   T_command command=p_command();
   if (!command)
@@ -66,6 +70,12 @@ static T_pipeline p_pipeline() {
   return pipeline;
 }
 
+/**
+ * Creates a pipeline object by calling p_pipeline()
+ * Creates a new sequence object calling new_sequence()
+ * 
+ * Eats '&' and ';', and expects another p_sequence()
+ */
 static T_sequence p_sequence() {
   T_pipeline pipeline=p_pipeline();
   if (!pipeline)
@@ -83,6 +93,13 @@ static T_sequence p_sequence() {
   return sequence;
 }
 
+/**
+ * Creates scanner using a pointer (passed as parameter)
+ * After p_sequence() is called and executed, if there is
+ * any characters left in the line, it will throw an error. 
+ * 
+ * *s is the line to be parsed
+ */
 extern Tree parseTree(char *s) {
   scan=newScanner(s);
   Tree tree=p_sequence();
