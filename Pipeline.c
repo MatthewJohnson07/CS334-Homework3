@@ -23,8 +23,8 @@ extern Pipeline newPipeline(int fg) {
 }
 
 extern void addPipeline(Pipeline pipeline, Command command) {
-  PipelineRep r=(PipelineRep)pipeline;
-  deq_tail_put(r->processes,command);
+  PipelineRep r=(PipelineRep)pipeline; // Creates pipeline object
+  deq_tail_put(r->processes,command); // Inserts, another queue of processes as one element of the array
 }
 
 extern int sizePipeline(Pipeline pipeline) {
@@ -33,15 +33,28 @@ extern int sizePipeline(Pipeline pipeline) {
 }
 
 static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
+  // printf("Execute called\n");
   PipelineRep r=(PipelineRep)pipeline;
+
+  if(!r){
+    // printf("PipelineRep is empty");
+  }
+
   for (int i=0; i<sizePipeline(r) && !*eof; i++){
-    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1); // this command is run, Command.c
+    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1); // Processes is a queue, uses head_ith to get i from queue
   }
 }
 
 extern void execPipeline(Pipeline pipeline, Jobs jobs, int *eof) {
+  // printf("ExecPipeline called\n");
   int jobbed=0;
-  execute(pipeline,jobs,&jobbed,eof); // same file, method above
+  if(!pipeline){
+    // printf("Pipeline is an empty object");
+  } else {
+    // printf("Pipeline is NOT empty\n");
+  }
+
+  execute(pipeline,jobs,&jobbed,eof);
   if (!jobbed)
     freePipeline(pipeline);	// for fg builtins, and such
 }

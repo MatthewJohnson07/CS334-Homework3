@@ -1,3 +1,12 @@
+/*
+ *
+ *
+ * r -> CommandRep (Command Representation), represents one Command, contains a file pointer and arguments
+ * eof -> pointer to end of file, set to 1 in exit and set to 0 in child functions
+ * jobs -> queue of Job objects
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,6 +30,7 @@ static char *owd=0;
 static char *cwd=0;
 
 static void builtin_args(CommandRep r, int n) {
+  // printf("builtin args\n");
   char **argv=r->argv;
   for (n++; *argv++; n--);
   if (n)
@@ -35,7 +45,7 @@ BIDEFN(exit) {
 BIDEFN(pwd) {
   builtin_args(r,0);
   if (!cwd)
-    cwd=getcwd(0,0);
+    cwd=getcwd(0,0); // returns command of the current directory
   printf("%s\n",cwd);
 }
 
@@ -54,27 +64,41 @@ BIDEFN(cd) {
     ERROR("chdir() failed"); // warn
 }
 
+/**
+ * BuiltIn Struct:
+ *  *s -> not originally set
+ *  *f -> points to a list of arguments (r, eof, jobs) is what was passed in
+ *  r -> CommandRep
+ */
 static int builtin(BIARGS) {
-  typedef struct { // makes it here
+  // printf("BuiltIn called\n");
+  typedef struct { // Builtin
     char *s;
     void (*f)(BIARGS);
   } Builtin;
+  // printf("BuiltIn Struct created\n");
   static const Builtin builtins[]={
     BIENTRY(exit),
     BIENTRY(pwd),
     BIENTRY(cd),
     {0,0}
   };
+  // printf("BuiltIn Array created\n");
+
   int i;
-  for (i=0; builtins[i].s; i++)
-    if (!strcmp(r->file,builtins[i].s)) {
-      builtins[i].f(r,eof,jobs); // error in here, calls array above
+  for (i=0; builtins[i].s; i++){ // builtins[i].s is a pointer, loop will continue until the pointer s references to a 0 or null
+    // printf("\tFor loop iteration\n");
+    if (!strcmp(r->file,builtins[i].s)) { // The strcmp() compares two strings character by character. If the strings are equal, the function returns 0.
+      // printf("For loop is entered\n");
+      builtins[i].f(r,eof,jobs); // f is a function pointer, 
       return 1;
     }
+  }
   return 0;
 }
 
 static char **getargs(T_words words) {
+  // printf("Get args called\n");
   int n=0;
   T_words p=words;
   while (p) {
@@ -95,6 +119,7 @@ static char **getargs(T_words words) {
 }
 
 extern Command newCommand(T_words words) {
+  // printf("New command\n");
   CommandRep r=(CommandRep)malloc(sizeof(*r));
   if (!r)
     ERROR("malloc() failed");
@@ -113,9 +138,31 @@ static void child(CommandRep r, int fg) {
   exit(0);
 }
 
+/**
+ * command -> command being executed
+ * pipeline -> TBD
+ * jobs -> queue of jobs to be executed
+ * jobbed -> TBD
+ * eof -> end of file pointer (1 = exit)
+ * fg -> set to 1 when called from executeCommand
+ */
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
+  // printf("ExecuteCommand called\n");
   CommandRep r=command;
+
+  if(!r){
+    printf("Command is empty\n");
+  }
+
+  if(!pipeline){
+    printf("Pipeline is empty\n");
+  }
+
+  if(!jobs){
+    printf("Jobs is empty\n");
+  }
+
   if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
     return;
   }
@@ -132,6 +179,7 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 }
 
 extern void freeCommand(Command command) {
+  // printf("Free command\n");
   CommandRep r=command;
   char **argv=r->argv;
   while (*argv)
