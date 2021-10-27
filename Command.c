@@ -15,6 +15,7 @@
 
 #include "Command.h"
 #include "error.h"
+#include <readline/history.h>
 
 typedef struct {
   char *file;
@@ -37,6 +38,28 @@ static void builtin_args(CommandRep r, int n) {
     ERROR("wrong number of arguments to builtin command"); // warn
 }
 
+BIDEFN(history){
+  if(r->argv[1]){
+    builtin_args(r,1);
+    if (strcmp(r->argv[1],"-c")==0) {
+      stifle_history(0);
+      unstifle_history();
+      history_base = 1;
+    }
+  } else {
+    builtin_args(r,0);
+  }
+
+  register HIST_ENTRY **hist;
+  hist = history_list ();
+  int i;
+  if (hist){
+    for (i = 0; hist[i]; i++){
+      printf ("%d: %s\n", i + history_base, hist[i]->line);
+    }
+  }
+}
+
 BIDEFN(exit) {
   builtin_args(r,0);
   *eof=1;
@@ -49,16 +72,23 @@ BIDEFN(pwd) {
   printf("%s\n",cwd);
 }
 
+/**
+ * Sets CWD to new directory and sets OWD to CWD
+ * 
+ * CWD stands for Current Working Directory
+ * OWD stands for Old Working Directory
+ */
 BIDEFN(cd) {
   builtin_args(r,1);
   if (strcmp(r->argv[1],"-")==0) {
+    // printf("- was found\n");
     char *twd=cwd;
     cwd=owd;
     owd=twd;
   } else {
     if (owd) free(owd);
     owd=cwd;
-    cwd=strdup(r->argv[1]);
+    cwd=strdup(r->argv[1]); // strdup duplicates a string at CommandRep arg[1]
   }
   if (cwd && chdir(cwd))
     ERROR("chdir() failed"); // warn
@@ -81,6 +111,7 @@ static int builtin(BIARGS) {
     BIENTRY(exit),
     BIENTRY(pwd),
     BIENTRY(cd),
+    BIENTRY(history),
     {0,0}
   };
   // printf("BuiltIn Array created\n");
@@ -123,8 +154,8 @@ extern Command newCommand(T_words words) {
   CommandRep r=(CommandRep)malloc(sizeof(*r));
   if (!r)
     ERROR("malloc() failed");
-  r->argv=getargs(words);
-  r->file=r->argv[0];
+  r->argv=getargs(words); // sets r->args
+  r->file=r->argv[0]; // sets r->file to the first argv[0]
   return r;
 }
 
@@ -150,19 +181,6 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
   // printf("ExecuteCommand called\n");
   CommandRep r=command;
-
-  if(!r){
-    printf("Command is empty\n");
-  }
-
-  if(!pipeline){
-    printf("Pipeline is empty\n");
-  }
-
-  if(!jobs){
-    printf("Jobs is empty\n");
-  }
-
   if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
     return;
   }
@@ -175,7 +193,7 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
   if (pid==-1)
     ERROR("fork() failed");
   if (pid==0)
-    child(r,fg);
+    child(r,fg); // Passes in r (CommandRep) and fg which is set to 1 when executing (it appears)
 }
 
 extern void freeCommand(Command command) {

@@ -27,12 +27,13 @@ int main() {
   
   while (!eof) {
     char *line=readline(prompt);
+    // printf("%s\n",line); // prints the line as is, ex. pwd would print pwd
     if (!line){
       break;
     }
 
     if (*line){
-      add_history(line);
+      add_history(line); // adds history to the end of the history list
     }
     Tree tree=parseTree(line);
     free(line);

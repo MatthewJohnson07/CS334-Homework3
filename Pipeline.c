@@ -36,10 +36,6 @@ static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
   // printf("Execute called\n");
   PipelineRep r=(PipelineRep)pipeline;
 
-  if(!r){
-    // printf("PipelineRep is empty");
-  }
-
   for (int i=0; i<sizePipeline(r) && !*eof; i++){
     execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1); // Processes is a queue, uses head_ith to get i from queue
   }
@@ -48,11 +44,6 @@ static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
 extern void execPipeline(Pipeline pipeline, Jobs jobs, int *eof) {
   // printf("ExecPipeline called\n");
   int jobbed=0;
-  if(!pipeline){
-    // printf("Pipeline is an empty object");
-  } else {
-    // printf("Pipeline is NOT empty\n");
-  }
 
   execute(pipeline,jobs,&jobbed,eof);
   if (!jobbed)
