@@ -1,3 +1,17 @@
+/* 
+ * Author: Matthew Johnson (CoAuthor)
+ * Date: Thurs 02 Sep 2021
+ * Description: 
+ *   The deq class represents a DLL linked list capable of functioning
+ *   as a normal DLL, stack, queue or other list implementation of adding
+ *   and removing from the head/tail or any index in-between. The Node class
+ *   represents each individual node of the DLL which holds a reference to a
+ *   generic data point. Error messages will be prompted if elements that are
+ *   requested to be removed do not exist. Likewise, if an element at an index
+ *   from the head or tail doesn't exist, an error message is displayed as well. 
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,23 +27,24 @@ typedef struct Node {
   Data data;
 } *Node;
 
+/**
+ * Initializes a rep object
+ */
 typedef struct {
   Node ht[Ends];			// head/tail nodes
   int len;
 } *Rep;
 
+/**
+ * Converts a deq into a rep
+ */
 static Rep rep(Deq q) {
   if (!q) ERROR("zero pointer");
   return (Rep)q;
 }
 
 /**
- * Using this method, you can append an item to the beginning or end of a list at the head or tail position.
- * @param r The list appending to
- * @param e The head or tail enum
- * @param d The data being added
- * @return void
- * 
+ * Inserts a new Node at the end
  */
 static void put(Rep r, End e, Data d) 
 {
@@ -53,7 +68,7 @@ static void put(Rep r, End e, Data d)
     }
     r->len=r->len+1;
   }
-  //This section adds at the head
+  
   if(e==Head)
   {
     Node start = malloc(sizeof(struct Node));
@@ -85,42 +100,57 @@ static void put(Rep r, End e, Data d)
  */
 static Data ith(Rep r, End e, int i) 
 { 
-  //covers out of bounds index
-  if(i<0 || i >= r->len)
+  Node head = r->ht[0];
+  Node tail = r->ht[1];
+
+  if (head == NULL || tail == NULL)
   {
-    printf("The desired index is not in the list.\n");
-    return NULL;
+    fprintf(stderr, "A NULL value was tried to be accessed");
+    exit(EXIT_FAILURE);
   }
-  //this section covers starting at the tail
-  if(e==Tail)
+
+  // Starts at head
+  if (e == 0)
   {
-    Node req=r->ht[Tail];
-    for(int k=0; k!=i; k++)
+    int tmp;
+    Node curNode = head;
+    for (tmp = 0; tmp < i; tmp++)
     {
-      req=req->np[Head];
+      if (curNode->np[1] != NULL)
+      {
+        curNode = curNode->np[1];
+      }
+      else
+      {
+        fprintf(stderr, "There is not a value found at the index %d requested from head", i);
+        exit(EXIT_FAILURE);
+      }
     }
-    return req->data;
+    return curNode->data;
   }
-  //this section covers starting at the head
-  if(e==Head)
-  {
-    Node req=r->ht[Head];
-    for(int k=0; k!=i; k++)
+  else
+  { // Starts at tail
+    int tmp;
+    Node curNode = tail;
+    int count = 0;
+    for (tmp = 0; tmp < i; tmp++)
     {
-      req=req->np[Tail];
+      if (curNode->np[0] != NULL)
+      {
+        curNode = curNode->np[0];
+        count++;
+      }
+      else
+      {
+        printf("%d", count);
+        fprintf(stderr, "There is not a value found at the index %d requested from tail", i);
+        exit(EXIT_FAILURE);
+      }
     }
-    return req->data;
+    return curNode->data;
   }
-  return 0; 
 }
 
-/**
- * This method removes a node from the beginning or end of the desired list.
- * @param r The list appending from
- * @param e The head or tail enum
- * @return data
- * 
- */
 static Data get(Rep r, End e) 
 {
     if(r->len > 2)
@@ -164,7 +194,6 @@ static Data get(Rep r, End e)
       r->len=r->len-1;
       return back->data;
     }
-  //case for empty list
   if(r->len==0)
   {
     printf("List is empty, can't remove.\n");
@@ -173,23 +202,14 @@ static Data get(Rep r, End e)
   return 0;
 }
 
-/**
- * This method removes specified data if it is found in the desired list.
- * @param r The desired list
- * @param e The head or tail enum
- * @param d The specified data to be found
- * @return data
- * 
- */
 static Data rem(Rep r, End e, Data d) 
 {
-  //Takes care of Tail
+  // Tail
   if(e==Tail)
   {
     Node pos=r->ht[Tail];
     while(pos != NULL)
     {
-      //This section covers if the data is equal
       if(pos->data == d)
       {
         if(pos==r->ht[Head])
