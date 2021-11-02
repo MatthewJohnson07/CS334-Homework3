@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 #include <string.h>
 
@@ -86,7 +88,9 @@ BIDEFN(cd) {
     cwd=owd;
     owd=twd;
   } else {
-    if (owd) free(owd);
+    if (owd){
+      free(owd);
+    }
     owd=cwd;
     cwd=strdup(r->argv[1]); // strdup duplicates a string at CommandRep arg[1]
   }
@@ -94,7 +98,7 @@ BIDEFN(cd) {
     ERROR("chdir() failed"); // warn
 }
 
-/**
+/*
  * BuiltIn Struct:
  *  *s -> not originally set
  *  *f -> points to a list of arguments (r, eof, jobs) is what was passed in
@@ -162,6 +166,11 @@ extern Command newCommand(T_words words) {
 static void child(CommandRep r, int fg) {
   int eof=0;
   Jobs jobs=newJobs();
+
+  if(fg == 0){
+    printf("background");
+  }
+
   if (builtin(r,&eof,jobs))
     return;
   execvp(r->argv[0],r->argv);
@@ -175,12 +184,19 @@ static void child(CommandRep r, int fg) {
  * jobs -> queue of jobs to be executed
  * jobbed -> TBD
  * eof -> end of file pointer (1 = exit)
- * fg -> set to 1 when called from executeCommand
+ * fg -> set to 1 to run in foreground
  */
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
   // printf("ExecuteCommand called\n");
   CommandRep r=command;
+  int arg_count = 0; 
+  while(r->argv[++arg_count]);
+
+  if(r->argv[arg_count] == '&'){
+    printf("RUN IN BACKGROUND");
+  }
+
   if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
     return;
   }
@@ -189,11 +205,24 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
     *jobbed=1;
     addJobs(jobs,pipeline);
   }
+
+  if(fg == 0){
+    printf("background");
+  }
+
   int pid=fork();
-  if (pid==-1)
+  if (pid==-1){
     ERROR("fork() failed");
-  if (pid==0)
+  }
+
+  if (pid==0){
+    int rc_wait = wait(NULL);
     child(r,fg); // Passes in r (CommandRep) and fg which is set to 1 when executing (it appears)
+  } else {
+    waitpid(pid, NULL, 0);
+    // printf("parent: %d\n",(int) getpid());
+    // execvp(r->argv[0],r->argv);
+  }
 }
 
 extern void freeCommand(Command command) {
