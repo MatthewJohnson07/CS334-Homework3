@@ -1,3 +1,15 @@
+/* 
+ * Author: Matthew Johnson (CoAuthor)
+ * Date: Tues 02 Nov 2021
+ * Description: 
+ *   The parser class has several useful methods utilized by shell.c in order to produce
+ *   a tree for a line typed in the shell prompt. The main function, parseTree() utilizes 
+ *   many of the helper methods to scan through each token and store in a T_words object
+ *   while appropriately identifying operators such as '>' '<' '&' ';'. Within a sequence
+ *   object, the operator is stored using ->op which is referenced inside the Interpreter. 
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +81,13 @@ static T_pipeline p_pipeline() {
   pipeline->command=command;
   if (eat("|"))
     pipeline->pipeline=p_pipeline();
+  if (eat(">")){
+    // TODO
+  }
+  if (eat("<")){
+    // TODO
+  }
+
   return pipeline;
 }
 
@@ -86,7 +105,7 @@ static T_sequence p_sequence() {
   sequence->pipeline=pipeline;
   // printf("%s", curr()); // Prints & or last character of line not already processed
   if (eat("&")) {
-    sequence->op="&";
+    sequence->op="&"; // Stores inside sequence, later referenced in Interpreter.c
     sequence->sequence=p_sequence();
   }
   if (eat(";")) {

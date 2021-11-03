@@ -1,3 +1,15 @@
+/* 
+ * Author: Matthew Johnson (CoAuthor)
+ * Date: Tues 02 Nov 2021
+ * Description: 
+ *   This file is where everything begins. parseTree returns essentially a Sequence object
+ *   that stores the words of a command as well as any operators. With this, the tree can
+ *   be passed into an Interpreter and converted back into a Sequence to utilize useful data. 
+ *   Within this function, the tree is created and individual commands are executed using other
+ *   classes and the next prompt is displayed within this class. 
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

@@ -1,8 +1,13 @@
-/*
- *
- * r -> CommandRep (Command Representation), represents one Command, contains a file pointer and arguments
- * eof -> pointer to end of file, set to 1 in exit and set to 0 in child functions
- * jobs -> queue of Job objects
+/* 
+ * Author: Matthew Johnson (CoAuthor)
+ * Date: Tues 02 Nov 2021
+ * Description: 
+ *   Command is where the main functionality of our shell is found. ExecCommand() is utilized to
+ *   determine whether a builtin can be utilized, if not, the parent process is forked and the integer
+ *   fg (foreground) determines whether the parent process should be executed in the foreground or background
+ *   and if it should wait to execute. getArgs is a very useful method as it holds all of the contents for a
+ *   given command. This is very useful for something as simple as "history -c" where the '-c' is a separate 
+ *   argument. Command creates and executes command objects for the purpose of fulfilling a job. 
  * 
  */
 
@@ -13,7 +18,6 @@
 #include <sys/types.h>
 
 #include <string.h>
-
 #include "Command.h"
 #include "error.h"
 #include <readline/history.h>
@@ -28,8 +32,8 @@ typedef struct {
 #define BIDEFN(name) static void BINAME(name) (BIARGS)
 #define BIENTRY(name) {#name,BINAME(name)}
 
-static char *owd=0;
-static char *cwd=0;
+static char *owd=0; // Old directory
+static char *cwd=0; // Current directory
 
 static void builtin_args(CommandRep r, int n) {
   // printf("builtin args\n");
@@ -39,14 +43,17 @@ static void builtin_args(CommandRep r, int n) {
     ERROR("wrong number of arguments to builtin command"); // warn
 }
 
+/* History Builtin */
 BIDEFN(history){
   if(r->argv[1]){
     builtin_args(r,1);
-    if (strcmp(r->argv[1],"-c")==0) {
+
+    if (strcmp(r->argv[1],"-c")==0) { // Clears history
       stifle_history(0);
       unstifle_history();
       history_base = 1;
     }
+
   } else {
     builtin_args(r,0);
   }
@@ -61,11 +68,13 @@ BIDEFN(history){
   }
 }
 
+/* Exits shell builtin */
 BIDEFN(exit) {
   builtin_args(r,0);
   *eof=1;
 }
 
+/* Displays current directory */
 BIDEFN(pwd) {
   builtin_args(r,0);
   if (!cwd)
@@ -153,7 +162,6 @@ static char **getargs(T_words words) {
 }
 
 extern Command newCommand(T_words words) {
-  // printf("New command\n");
   CommandRep r=(CommandRep)malloc(sizeof(*r));
   if (!r)
     ERROR("malloc() failed");
@@ -183,6 +191,9 @@ static void child(CommandRep r, int fg) {
  */
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
+
+  int fd[2]; // File descriptors, TODO
+
   CommandRep r=command;
 
   if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
@@ -198,21 +209,24 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
   if (pid==-1){
     ERROR("fork() failed");
   }
-
   if (pid==0){ // Returned a successful child process
+    // close(fd[0]);
+    // write(fd[1], __, ___)
     int rc_wait;
-    rc_wait = wait(NULL);
-    child(r,fg); // Passes in r (CommandRep) and fg which is set to 1 when executing (it appears)
-  } else { // Returned to parent/caller
     if(fg == 1){
-      wait(NULL);
+      rc_wait = waitpid(pid, NULL, 0);
     }
-    // printf("parent: %d\n",(int) getpid());
+    child(r,fg);
+  } else { // Returned to parent/caller
+    // close(fd[1]);
+    // read string from pipe and store it TODO
+    if(fg == 1){
+      waitpid(pid, NULL, 0);
+    }
   }
 }
 
 extern void freeCommand(Command command) {
-  // printf("Free command\n");
   CommandRep r=command;
   char **argv=r->argv;
   while (*argv)

@@ -32,9 +32,17 @@ static void i_sequence(T_sequence t, Sequence sequence) {
     return;
   int fg = 1;
   if(t->op != NULL){
+    // if(strcmp(t->op,"&")){ // Run in background
+    //   fg = 0;
+    // } else if(strcmp(t->op,";")){ // Run in foreground(?)
+    //   fg = 1;
+    // } else {
+    //   fg = 0; 
+    // }
     fg = 0;
     //printf("%s\n", t->op); // throws segmentation fault if empty
   }
+
   Pipeline pipeline=newPipeline(fg);
   i_pipeline(t->pipeline,pipeline);
   addSequence(sequence,pipeline);
