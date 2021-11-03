@@ -30,7 +30,12 @@ static void i_pipeline(T_pipeline t, Pipeline pipeline) {
 static void i_sequence(T_sequence t, Sequence sequence) {
   if (!t)
     return;
-  Pipeline pipeline=newPipeline(1);
+  int fg = 1;
+  if(t->op != NULL){
+    fg = 0;
+    //printf("%s\n", t->op); // throws segmentation fault if empty
+  }
+  Pipeline pipeline=newPipeline(fg);
   i_pipeline(t->pipeline,pipeline);
   addSequence(sequence,pipeline);
   i_sequence(t->sequence,sequence);
@@ -41,5 +46,5 @@ extern void interpretTree(Tree t, int *eof, Jobs jobs) {
     return;
   Sequence sequence=newSequence();
   i_sequence(t,sequence);
-  execSequence(sequence,jobs,eof); // this line is causing zero pointer error, Sequence.c
+  execSequence(sequence,jobs,eof); 
 }

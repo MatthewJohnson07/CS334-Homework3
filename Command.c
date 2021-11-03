@@ -1,6 +1,5 @@
 /*
  *
- *
  * r -> CommandRep (Command Representation), represents one Command, contains a file pointer and arguments
  * eof -> pointer to end of file, set to 1 in exit and set to 0 in child functions
  * jobs -> queue of Job objects
@@ -167,10 +166,6 @@ static void child(CommandRep r, int fg) {
   int eof=0;
   Jobs jobs=newJobs();
 
-  if(fg == 0){
-    printf("background");
-  }
-
   if (builtin(r,&eof,jobs))
     return;
   execvp(r->argv[0],r->argv);
@@ -179,23 +174,16 @@ static void child(CommandRep r, int fg) {
 }
 
 /**
- * command -> command being executed
- * pipeline -> TBD
- * jobs -> queue of jobs to be executed
- * jobbed -> TBD
- * eof -> end of file pointer (1 = exit)
- * fg -> set to 1 to run in foreground
+ * @param command -> command being executed
+ * @param pipeline -> pipeline object
+ * @param jobs -> queue of jobs to be executed
+ * @param jobbed -> integer pointer
+ * @param eof -> end of file pointer (1 = exit)
+ * @param fg -> set to 1 to run in foreground
  */
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
-  // printf("ExecuteCommand called\n");
   CommandRep r=command;
-  int arg_count = 0; 
-  while(r->argv[++arg_count]);
-
-  if(r->argv[arg_count] == '&'){
-    printf("RUN IN BACKGROUND");
-  }
 
   if (fg && builtin(r,eof,jobs)){ // error is thrown inside this builtin() function
     return;
@@ -206,22 +194,20 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
     addJobs(jobs,pipeline);
   }
 
-  if(fg == 0){
-    printf("background");
-  }
-
   int pid=fork();
   if (pid==-1){
     ERROR("fork() failed");
   }
 
-  if (pid==0){
-    int rc_wait = wait(NULL);
+  if (pid==0){ // Returned a successful child process
+    int rc_wait;
+    rc_wait = wait(NULL);
     child(r,fg); // Passes in r (CommandRep) and fg which is set to 1 when executing (it appears)
-  } else {
-    waitpid(pid, NULL, 0);
+  } else { // Returned to parent/caller
+    if(fg == 1){
+      wait(NULL);
+    }
     // printf("parent: %d\n",(int) getpid());
-    // execvp(r->argv[0],r->argv);
   }
 }
 

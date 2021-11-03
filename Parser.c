@@ -34,6 +34,7 @@ static T_word p_word() {
 }
 
 static T_words p_words() {
+  //printf("cur: %s\n", curr());
   T_word word=p_word();
   if (!word)
     return 0;
@@ -63,6 +64,7 @@ static T_pipeline p_pipeline() {
   T_command command=p_command();
   if (!command)
     return 0;
+  
   T_pipeline pipeline=new_pipeline();
   pipeline->command=command;
   if (eat("|"))
@@ -82,6 +84,7 @@ static T_sequence p_sequence() {
     return 0;
   T_sequence sequence=new_sequence();
   sequence->pipeline=pipeline;
+  // printf("%s", curr()); // Prints & or last character of line not already processed
   if (eat("&")) {
     sequence->op="&";
     sequence->sequence=p_sequence();
@@ -90,6 +93,7 @@ static T_sequence p_sequence() {
     sequence->op=";";
     sequence->sequence=p_sequence();
   }
+  // printf("current %s\n", curr()); 
   return sequence;
 }
 
@@ -100,7 +104,7 @@ static T_sequence p_sequence() {
  * 
  * *s is the line to be parsed
  */
-extern Tree parseTree(char *s) {
+extern Tree parseTree(char *s) { // Called from shell.c, returns tree
   scan=newScanner(s);
   Tree tree=p_sequence();
   if (curr())
